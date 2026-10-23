@@ -1,0 +1,49 @@
+# Environment
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Secrets (Firebase service account etc.) — never commit
+secrets/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+
+# Django
+db.sqlite3
+/staticfiles/
+/media/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+**/.DS_Store
+
+# celery beat schedule file
+celerybeat-schedule*
+
+# Logs
+*.log
+
+# Test / lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# Safety net: Firebase service-account keys outside secrets/
+*firebase-adminsdk*.json

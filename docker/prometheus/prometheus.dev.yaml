@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Django app metrics
+  - job_name: 'safarichap_api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['app:8000']
+
+  # Server CPU, RAM, disk metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node_exporter:9100']
+
+  # Celery task metrics
+  - job_name: 'celery'
+    static_configs:
+      - targets: ['celery_exporter:9808']
+
+  # Postgres metrics
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres_exporter:9187']
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
