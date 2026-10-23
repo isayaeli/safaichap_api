@@ -10,6 +10,7 @@ from .serializers import DeviceTokenSerializer, KycSubmitSerializer, UserSeriali
 
 class CurrentUserAPIView(APIView):
     """GET/PATCH /api/users/me/ — the profile is created on first authenticated call."""
+    throttle_scope = 'account'
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
@@ -23,6 +24,7 @@ class CurrentUserAPIView(APIView):
 
 class RegisterDeviceView(APIView):
     """POST /api/users/devices/ — upsert on token and reassign it to the current user."""
+    throttle_scope = 'account'
 
     def post(self, request):
         serializer = DeviceTokenSerializer(data=request.data)

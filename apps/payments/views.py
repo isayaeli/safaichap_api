@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from utils import card_gateway, clickpesa
@@ -45,6 +46,8 @@ class ClickPesaWebhookView(APIView):
     """POST /api/payments/webhooks/clickpesa/?secret=… (no auth; shared-secret verified)."""
     authentication_classes = []
     permission_classes = [AllowAny]
+    # Providers retry in bursts from a few IPs: only the webhook scope applies, not the anon rate.
+    throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'webhooks'
 
     def post(self, request):
@@ -74,6 +77,8 @@ class CardWebhookView(APIView):
     """POST /api/payments/webhooks/card/ (Flutterwave; `verif-hash` header verified)."""
     authentication_classes = []
     permission_classes = [AllowAny]
+    # Providers retry in bursts from a few IPs: only the webhook scope applies, not the anon rate.
+    throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'webhooks'
 
     def post(self, request):

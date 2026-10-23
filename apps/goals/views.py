@@ -43,6 +43,7 @@ def _plan_from(data):
 
 class GoalListCreateView(APIView):
     """GET /api/goals/ (newest first, optional ?status=) · POST /api/goals/ (creates a draft)."""
+    throttle_scope = 'goal_changes'
 
     def get(self, request):
         goals = goals_for(request.user)
@@ -63,6 +64,7 @@ class GoalListCreateView(APIView):
 
 class GoalQuoteView(APIView):
     """POST /api/goals/quote/ — preview only, nothing is saved."""
+    throttle_scope = 'quotes'
 
     def post(self, request):
         serializer = PlanSerializer(data=request.data)
@@ -72,6 +74,7 @@ class GoalQuoteView(APIView):
 
 class GoalDetailView(APIView):
     """GET /api/goals/{uuid}/ · DELETE (drafts only)."""
+    throttle_scope = 'goal_changes'
 
     def get(self, request, goal_uuid):
         goal = get_object_or_404(goals_for(request.user), uuid=goal_uuid)
@@ -83,12 +86,16 @@ class GoalDetailView(APIView):
 
 
 class GoalActivateView(APIView):
+    throttle_scope = 'goal_changes'
+
     def post(self, request, goal_uuid):
         goal = goal_service.activate_goal(request.user, goal_uuid)
         return Response(SavingsGoalSerializer(_fresh(request.user, goal.uuid)).data)
 
 
 class GoalRescheduleView(APIView):
+    throttle_scope = 'goal_changes'
+
     def post(self, request, goal_uuid):
         serializer = RescheduleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -109,6 +116,8 @@ class GoalCancellationQuoteView(APIView):
 
 
 class GoalCancelView(APIView):
+    throttle_scope = 'goal_changes'
+
     def post(self, request, goal_uuid):
         serializer = CancelSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
