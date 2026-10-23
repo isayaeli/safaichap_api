@@ -179,6 +179,23 @@ REST_FRAMEWORK = {
     'DATE_FORMAT': '%Y-%m-%d',
 }
 
+SWAGGER_SETTINGS = {
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'utils.api_docs.ApiAutoSchema',
+    'SECURITY_DEFINITIONS': {
+        'Firebase': {
+            'type': 'apiKey', 'in': 'header', 'name': 'Authorization',
+            'description': "`Bearer <Firebase ID token>`",
+        },
+    },
+    'SECURITY_REQUIREMENTS': [{'Firebase': []}],
+    'DEFAULT_MODEL_RENDERING': 'example',
+}
+REDOC_SETTINGS = {
+    'EXPAND_RESPONSES': '200,201',
+    'REQUIRED_PROPS_FIRST': True,
+    'PATH_IN_MIDDLE': True,
+}
+
 
 # Celery configuration
 REDIS_URL = config('REDIS_URL', default='redis://redis:6379/0')

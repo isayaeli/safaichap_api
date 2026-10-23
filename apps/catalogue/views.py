@@ -3,17 +3,20 @@ from datetime import timedelta
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.choices import AccommodationLevel, Residency
 from apps.core.models import AppSetting
 from utils.dates import today
+from utils.api_docs import CURRENCY_PARAM, NOT_FOUND, RESIDENCY_PARAM, VALIDATION_ERROR
 from utils.exceptions import BadRequest
 from utils.money import is_supported
 from utils.pagination_util import ItineraryPagination
 from .models import Destination, Itinerary
-from .serializers import DestinationSerializer, ItinerarySerializer, display_price
+from .serializers import DestinationSerializer, ItineraryPageSerializer, ItinerarySerializer, display_price
 
 
 def itinerary_queryset():
@@ -52,6 +55,33 @@ def _int_param(params, name, low=None, high=None):
 class ItineraryListView(APIView):
     """GET /api/itineraries/ — paginated, active only, featured first then newest."""
 
+    @swagger_auto_schema(
+        operation_summary="List trips",
+        operation_description=(
+            "Active trips, featured first, then by sort order and newest. 10 per page. "
+            "Price filters compare against `display_price` (per adult, in the display currency)."
+        ),
+        manual_parameters=[
+            openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, description="Page number, from 1."),
+            openapi.Parameter('search', openapi.IN_QUERY, type=openapi.TYPE_STRING,
+                              description="Matches the trip title or a destination name (case-insensitive)."),
+            openapi.Parameter('destination', openapi.IN_QUERY, type=openapi.TYPE_STRING,
+                              description="Exact destination name, as returned by `/api/itineraries/destinations/`."),
+            openapi.Parameter('accommodation_level', openapi.IN_QUERY, type=openapi.TYPE_STRING,
+                              enum=AccommodationLevel.values),
+            openapi.Parameter('min_days', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, description="Shortest trip length."),
+            openapi.Parameter('max_days', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, description="Longest trip length."),
+            openapi.Parameter('min_price', openapi.IN_QUERY, type=openapi.TYPE_INTEGER,
+                              description="Minimum `display_price`, minor units of the display currency."),
+            openapi.Parameter('max_price', openapi.IN_QUERY, type=openapi.TYPE_INTEGER,
+                              description="Maximum `display_price`, minor units of the display currency."),
+            openapi.Parameter('month', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, minimum=1, maximum=12,
+                              description="Only trips that can still be booked for the next occurrence of this "
+                                          "month (allowing for the lead time plus 7 days)."),
+            RESIDENCY_PARAM, CURRENCY_PARAM,
+        ],
+        responses={200: ItineraryPageSerializer, 400: VALIDATION_ERROR},
+    )
     def get(self, request):
         params = request.query_params
         context = display_context(request)
@@ -111,6 +141,12 @@ class ItineraryListView(APIView):
 class ItineraryDetailView(APIView):
     """GET /api/itineraries/{uuid}/"""
 
+    @swagger_auto_schema(
+        operation_summary="Get a trip",
+        operation_description="Full trip details with the day-by-day plan, prices and seasonal adjustments.",
+        manual_parameters=[RESIDENCY_PARAM, CURRENCY_PARAM],
+        responses={200: ItinerarySerializer, 400: VALIDATION_ERROR, 404: NOT_FOUND},
+    )
     def get(self, request, itinerary_uuid):
         itinerary = get_object_or_404(itinerary_queryset(), uuid=itinerary_uuid)
         return Response(ItinerarySerializer(itinerary, context=display_context(request)).data)
@@ -119,5 +155,10 @@ class ItineraryDetailView(APIView):
 class DestinationListView(APIView):
     """GET /api/itineraries/destinations/"""
 
+    @swagger_auto_schema(
+        operation_summary="List destinations",
+        operation_description="All destinations, alphabetically; use a `name` as the trip list's `destination` filter.",
+        responses={200: DestinationSerializer(many=True)},
+    )
     def get(self, request):
         return Response(DestinationSerializer(Destination.objects.all(), many=True).data)
