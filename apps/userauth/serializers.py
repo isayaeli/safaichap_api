@@ -17,6 +17,9 @@ class UserSerializer(serializers.ModelSerializer):
             'full_name': {'allow_null': True, 'required': False},
             'email': {'allow_null': True, 'required': False},
             'phone_number': {'allow_null': True, 'required': False},
+            'residency': {'help_text': "Sets the default price shown on trips."},
+            'preferred_currency': {'help_text': "Sets the default display currency."},
+            'country': {'help_text': "Two-letter ISO code, e.g. `TZ`."},
         }
 
     def validate_full_name(self, value):
@@ -39,13 +42,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class DeviceTokenSerializer(serializers.Serializer):
-    token = serializers.CharField(max_length=512)
+    token = serializers.CharField(max_length=512, help_text="FCM registration token / Firebase Installation ID.")
     platform = serializers.ChoiceField(choices=DeviceToken.PLATFORM_CHOICES)
 
 
 class KycSubmitSerializer(serializers.Serializer):
     document_type = serializers.ChoiceField(choices=('nida', 'passport'))
-    document_number = serializers.CharField(max_length=40, trim_whitespace=True)
+    document_number = serializers.CharField(
+        max_length=40, trim_whitespace=True,
+        help_text="NIDA: exactly 20 digits. Passport: 6–9 letters/digits. Spaces and dashes are ignored.")
 
     def validate(self, data):
         number = data['document_number'].replace(' ', '').replace('-', '').upper()
@@ -56,3 +61,9 @@ class KycSubmitSerializer(serializers.Serializer):
             raise serializers.ValidationError({'document_number': ["Enter a valid passport number."]})
         data['document_number'] = number
         return data
+
+
+class KycResultSerializer(serializers.Serializer):
+    """Response shape for the API docs."""
+    message = serializers.CharField()
+    kyc_status = serializers.CharField()

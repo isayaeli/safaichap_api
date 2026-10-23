@@ -9,6 +9,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from apps.userauth.authentication import FirebaseAuthentication
+from utils.api_docs import API_DESCRIPTION, ApiSchemaGenerator
 
 
 def health_check(request):
@@ -20,8 +21,9 @@ schema_view = get_schema_view(
     openapi.Info(
         title="SafariChap API",
         default_version='v1',
-        description="Backend for the SafariChap safari savings app.",
+        description=API_DESCRIPTION,
     ),
+    generator_class=ApiSchemaGenerator,
     public=settings.DEBUG,
     permission_classes=(permissions.AllowAny,) if settings.DEBUG else (permissions.IsAdminUser,),
     authentication_classes=(SessionAuthentication, FirebaseAuthentication),

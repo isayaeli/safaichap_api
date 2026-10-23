@@ -1,3 +1,4 @@
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from .models import Booking, TripDocument
@@ -7,6 +8,14 @@ class TripDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TripDocument
         fields = ['type', 'title', 'url', 'content']
+        extra_kwargs = {'content': {'help_text': "Text body; packing lists have one item per line."}}
+
+
+class OperatorContactSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    phone_number = serializers.CharField(allow_null=True)
+    email = serializers.EmailField(allow_null=True)
+    whatsapp = serializers.CharField(allow_null=True)
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -23,6 +32,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'travel_date', 'documents', 'operator_contact', 'created_at',
         ]
 
+    @swagger_serializer_method(OperatorContactSerializer())
     def get_operator_contact(self, obj):
         operator = obj.goal.itinerary.operator
         return {
