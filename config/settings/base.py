@@ -156,14 +156,26 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+    # Every request counts toward `user` (signed in) or `anon`; views with a
+    # `throttle_scope` also get that scope's limit on writes (utils/throttling.py).
     'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.ScopedRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+        'utils.throttling.ScopedWriteRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
+        'user': config('THROTTLE_USER', default='120/min'),
+        'anon': config('THROTTLE_ANON', default='30/min'),
         'payments': config('THROTTLE_PAYMENTS', default='20/min'),
         'kyc': config('THROTTLE_KYC', default='5/min'),
         'webhooks': config('THROTTLE_WEBHOOKS', default='600/min'),
+        'quotes': config('THROTTLE_QUOTES', default='60/min'),
+        'goal_changes': config('THROTTLE_GOAL_CHANGES', default='20/min'),
+        'account': config('THROTTLE_ACCOUNT', default='10/min'),
     },
+    # nginx is the one proxy in front of the app: take the client IP it appends
+    # to X-Forwarded-For, not a value the client could put there itself.
+    'NUM_PROXIES': config('NUM_PROXIES', default=1, cast=int),
     'DATE_FORMAT': '%Y-%m-%d',
 }
 
