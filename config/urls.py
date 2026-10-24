@@ -38,6 +38,7 @@ urlpatterns = [
     path('', include("apps.payments.urls")),
     path('', include("apps.bookings.urls")),
     path('', include("apps.notifications.urls")),
+    path('', include("apps.adminpanel.urls")),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 

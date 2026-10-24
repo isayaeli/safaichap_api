@@ -28,6 +28,9 @@ if [ "$RUN_MIGRATIONS" != "false" ]; then
 
     echo "🌱 Seeding catalogue..."
     python manage.py seed_catalogue
+
+    echo "🔐 Syncing dashboard roles..."
+    python manage.py seed_rbac
 fi
 
 echo "🚀 Starting: $*"

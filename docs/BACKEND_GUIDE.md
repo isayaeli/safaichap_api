@@ -595,3 +595,62 @@ keys in §5.
    1. Sign in, complete the profile and browse the catalogue (prices should change with residency and currency).
    2. Quote a goal, start saving, pay with mobile money, approve on the phone, then watch the status screen flip to success and the goal update.
    3. Pay the full balance; the booking and its documents should appear.
+
+---
+
+## 14. Admin dashboard API (`/api/admin/`)
+
+Used by the Flutter Web dashboard (`safarichap_admin`). Customer endpoints above are unchanged.
+
+### 14.1 Access model
+
+- **Auth:** the same `Authorization: Bearer <Firebase ID token>` as the app. Staff sign in with Firebase email + password.
+- **Who is staff:** a `UserAccount` with `is_staff=True` **and** an active `StaffProfile` (`apps/adminpanel`). Everyone else gets **403** on every `/api/admin/` endpoint. Bad or missing tokens stay **401**.
+- **Permissions:** codes like `payments.reconcile`. They're defined once in `apps/adminpanel/permissions.py` (`PERMISSIONS`) and synced into the DB by `manage.py seed_rbac`, which both entrypoints run.
+  - A staff member's codes are the union of their roles' codes, cached for 60 s and cleared on any role or staff change.
+  - Django superusers with a staff profile get every code.
+- **Views** declare `view_permission` (GET), `manage_permission` (writes) and per-action overrides (`action_permissions`). `HasAdminPermission` enforces them.
+- **Built-in roles** (`SYSTEM_ROLES`): Super Admin, Operations, Finance, Support, Content, Viewer.
+  - Super Admin always has every code and can't be edited.
+  - The other built-in roles can have their permissions edited but can't be renamed or deleted. `seed_rbac` only sets their defaults on first creation.
+- **Guards:** you can't deactivate or remove yourself. At least one active Super Admin must always remain (409 otherwise).
+- **Audit:** every write goes through `adminpanel.services.audit()`, which stores actor, action (e.g. `goal.pause`), target, before/after JSON and IP in `AuditLog`.
+- **First admin:** `python manage.py create_super_admin --email you@safarichap.co.tz --name "You"`. It creates the Firebase user if needed and prints a password-setup link.
+
+### 14.2 Conventions
+
+- Lists are paginated: `?page=` and `?page_size=` (default 25, max 200), returning `{count, next, previous, results}`.
+  - Roles and refund policies return a plain list.
+- `?search=` searches text fields, `?ordering=field` / `-field` sorts, and filters are exact fields (e.g. `?status=active`, `?created_at__gte=2026-01-01`).
+- Objects are addressed by `uuid`. Money is integer minor units plus `currency`, as everywhere else.
+- Errors use the same shapes as §2.3. A **409** means the object's state doesn't allow the action.
+
+### 14.3 Endpoints
+
+| Area | Endpoint | Permission |
+|---|---|---|
+| Session | `GET me/` → `{user, roles[], permissions[]}` | any staff |
+| Permissions | `GET permissions/` | `roles.view` |
+| Roles | `GET/POST roles/`, `PATCH/DELETE roles/{uuid}/` (`permissions` = list of codes) | `roles.view` / `roles.manage` |
+| Staff | `GET staff/`; `POST staff/` `{email, full_name, roles[uuid]}` → staff + `password_link` (also emailed); `PATCH staff/{uuid}/` `{full_name?, roles?, is_active?}`; `DELETE staff/{uuid}/` (removes dashboard access only) | `staff.view` / `staff.manage` |
+| Audit | `GET audit-logs/` (`action`, `action__startswith`, `target_type`, `target_id`, `actor__uuid`, `created_at__gte/lte`) | `audit.view` |
+| Overview | `GET stats/?days=30` (counts, money per currency, daily collections and sign-ups, top trips) | `reports.view` |
+| Customers | `GET users/`, `GET users/{uuid}/` (+ goals, payments, devices, KYC docs), `PATCH users/{uuid}/`, `GET users/export/` (CSV, same filters) | `users.view` / `users.manage` / `users.export` |
+| KYC | `GET kyc/?status=pending`, `POST kyc/{uuid}/approve/` / `reject/` `{note}`. Sets the user's `kyc_status` and notifies them | `kyc.view` / `kyc.review` |
+| Goals | `GET goals/`, `GET goals/{uuid}/` (+ installments, payments, refunds, `cancellation_quote`), `POST goals/{uuid}/pause/`, `resume/`, `reschedule/` `{travel_date, frequency?}`, `cancel/` `{reason}` | `goals.view` / `goals.manage` |
+| Payments | `GET payments/`, `GET payments/{uuid}/` (`raw_webhook` only with `payments.view_raw`), `POST payments/{uuid}/reconcile/` (pending only) | `payments.view` / `payments.reconcile` |
+| Refunds | `GET refunds/`, `POST refunds/{uuid}/process/` (pending/failed, ignores the 5-attempt cap), `POST refunds/{uuid}/mark-completed/` `{provider_reference}` (manual payout) | `refunds.view` / `refunds.manage` |
+| Bookings | `GET bookings/`, `GET/PATCH bookings/{uuid}/` `{status}`, `POST bookings/{uuid}/documents/`, `POST bookings/{uuid}/notify/`, `PATCH/DELETE trip-documents/{uuid}/` | `bookings.view` / `bookings.manage` |
+| Catalogue | CRUD on `operators/`, `destinations/`, `refund-policies/`, `itineraries/`. A trip is written whole: `destinations` (ordered uuids), `days`, and `pricing` with `seasonal_adjustments` replace what's stored. Deleting something still in use → 409 | `catalogue.view` / `catalogue.manage` |
+| Uploads | `POST uploads/` multipart `{file, folder}` → `{url}`. JPG/PNG/WebP/PDF ≤ 10 MB; `folder` = `itineraries`/`destinations` (catalogue.manage) or `documents` (bookings.manage) | per folder |
+| FX | `GET fx-rates/`, `GET fx-rates/current/`, `POST fx-rates/` `{from_currency, numerator, denominator}` (manual rate), `POST fx-rates/refresh/` (queues the provider fetch) | `fx.view` / `fx.manage` |
+| Settings | `GET/PATCH settings/` (the `AppSetting` singleton) | `settings.view` / `settings.manage` |
+| Notifications | `GET notifications/` (everything customers received), `GET broadcasts/`, `POST broadcasts/` `{title, message, audience: all\|residency\|goal_status\|users, residency?, goal_status?, user_uuids?, dry_run?}` | `notifications.view` / `notifications.send` |
+
+### 14.4 Rules the admin actions keep
+
+- **Reschedule and cancel** call the same `goals.services` functions as the app: the price stays locked, refunds follow the refund policy, and the customer is notified.
+- **Pause and resume** only flip `active` ↔ `paused`. Resume resets `consecutive_missed`.
+- **Reconcile** uses `payments.services.reconcile_payment`, the same path as the 2-minute task, so settlement stays idempotent.
+- **Trip edits** never touch active goals: their price was snapshotted at activation.
+- **New notification types:** `kyc_verified`, `kyc_rejected`, `booking_updated`, `announcement`. The app reads `type` as a plain string, so older app builds still list them.

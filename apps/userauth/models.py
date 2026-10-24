@@ -52,6 +52,8 @@ class KycDocument(TimeStampedModel):
     document_number = EncryptedTextField()
     status = models.CharField(max_length=20, choices=KycStatus.choices, default=KycStatus.PENDING)
     reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    review_note = models.CharField(max_length=255, blank=True, default='', help_text="Shown to the user on rejection.")
 
     class Meta:
         ordering = ['-created_at']
