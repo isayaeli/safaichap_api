@@ -78,10 +78,15 @@ TAGS = [
     {'name': 'Bookings', 'description': "Confirmed trips with vouchers and documents, created when a goal is fully paid."},
     {'name': 'Notifications', 'description': "The in-app notification list (each one is also sent as a push)."},
     {'name': 'Webhooks', 'description': "Called by payment providers, not the app. Authenticated by a shared secret."},
+    {'name': 'Admin: access', 'description': "Dashboard sign-in profile, staff, roles, permissions and the audit log."},
+    {'name': 'Admin: operations', 'description': "Customers, KYC, goals, payments, refunds, bookings and notifications."},
+    {'name': 'Admin: catalogue', 'description': "Operators, destinations, trips and refund policies."},
+    {'name': 'Admin: system', 'description': "Overview numbers, FX rates, business rules and uploads."},
 ]
 TAG_GROUPS = [
     {'name': 'App', 'tags': ['Account', 'Trips', 'Wishlist', 'Goals', 'Payments', 'Bookings', 'Notifications']},
     {'name': 'Integrations', 'tags': ['Webhooks']},
+    {'name': 'Admin dashboard', 'tags': ['Admin: access', 'Admin: operations', 'Admin: catalogue', 'Admin: system']},
 ]
 
 # Tag for each app's views; webhook views are tagged in their decorators.
@@ -89,6 +94,8 @@ MODULE_TAGS = {
     'apps.userauth.views': 'Account', 'apps.catalogue.views': 'Trips', 'apps.wishlist.views': 'Wishlist',
     'apps.goals.views': 'Goals', 'apps.payments.views': 'Payments', 'apps.bookings.views': 'Bookings',
     'apps.notifications.views': 'Notifications',
+    'apps.adminpanel.views.rbac': 'Admin: access', 'apps.adminpanel.views.ops': 'Admin: operations',
+    'apps.adminpanel.views.catalogue': 'Admin: catalogue', 'apps.adminpanel.views.system': 'Admin: system',
 }
 
 

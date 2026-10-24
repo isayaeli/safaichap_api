@@ -25,6 +25,7 @@ echo "✅ Postgres is up"
 if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "🔄 Running migrations..."
     python manage.py migrate --noinput
+    python manage.py seed_rbac
 
     echo "📦 Collecting static files..."
     python manage.py collectstatic --noinput

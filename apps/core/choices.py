@@ -89,3 +89,7 @@ class NotificationType(models.TextChoices):
     GOAL_PAUSED = 'goal_paused', 'Goal paused'
     GOAL_EXPIRED = 'goal_expired', 'Goal expired'
     GOAL_CANCELLED = 'goal_cancelled', 'Goal cancelled'
+    KYC_VERIFIED = 'kyc_verified', 'Identity verified'
+    KYC_REJECTED = 'kyc_rejected', 'Identity rejected'
+    BOOKING_UPDATED = 'booking_updated', 'Booking updated'
+    ANNOUNCEMENT = 'announcement', 'Announcement'

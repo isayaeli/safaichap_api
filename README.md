@@ -21,6 +21,7 @@ apps/
   bookings/       Booking, TripDocument
   notifications/  Notification + notify() (DB row + FCM push)
   wishlist/       WishlistItem (/api/users/wishlist/)
+  adminpanel/     Dashboard API (/api/admin/): roles + permission codes, StaffProfile, AuditLog, Broadcast
   core/           FxRate, AppSetting (configurable rules), enums, FX refresh task
 utils/            firebase, clickpesa, card_gateway, money, order_reference, pagination_util, encryption
 docker/           Dockerfiles, entrypoints, nginx, prometheus
@@ -42,6 +43,16 @@ On start, the dev entrypoint runs the migrations and `seed_catalogue`, which loa
 through nginx), with Swagger at `/swagger/`, Prometheus on :9090 and Grafana on :3001.
 
 Create an admin user with `docker compose -f docker-compose.dev.yaml exec app python manage.py createsuperuser`.
+
+For the admin dashboard (`../safarichap_admin`), give a Firebase email account the Super Admin role. This creates the
+Firebase user if needed and prints a link to set its password:
+
+```bash
+docker compose -f docker-compose.dev.yaml exec app python manage.py create_super_admin --email you@safarichap.co.tz --name "You"
+```
+
+Everyone else is invited from the dashboard (Staff → Invite). Roles and permissions are described in
+[docs/BACKEND_GUIDE.md §14](docs/BACKEND_GUIDE.md).
 
 ## Run locally (no Docker)
 

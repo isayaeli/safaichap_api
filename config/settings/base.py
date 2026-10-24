@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'apps.bookings',
     'apps.notifications',
     'apps.wishlist',
+    'apps.adminpanel.apps.AdminPanelConfig',
 ]
 
 MIDDLEWARE = [
@@ -256,7 +257,10 @@ SESSION_CACHE_ALIAS = "default"
 
 
 # CORS (the mobile app doesn't need it; only for browser clients you list here).
+# The admin dashboard (Flutter Web) is the browser client, e.g. https://admin.safarichap.co.tz.
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='', cast=Csv())
+# Lets `flutter run -d chrome` (random localhost port) reach a DEBUG server.
+CORS_ALLOWED_ORIGIN_REGEXES = [r'^http://(localhost|127\.0\.0\.1):\d+$'] if DEBUG else []
 
 
 # KYC document numbers are encrypted at rest with this Fernet key
