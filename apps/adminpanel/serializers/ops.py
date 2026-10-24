@@ -246,7 +246,8 @@ class BroadcastSerializer(serializers.ModelSerializer):
     class Meta:
         ref_name = 'AdminBroadcast'
         model = Broadcast
-        fields = ['uuid', 'title', 'message', 'audience', 'recipients', 'sent_by', 'created_at']
+        fields = ['uuid', 'title', 'message', 'audience', 'recipients', 'sent', 'pushed', 'failed', 'sent_by',
+                  'created_at']
 
     def get_sent_by(self, obj):
         return str(obj.sent_by) if obj.sent_by_id else None

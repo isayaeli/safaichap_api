@@ -103,6 +103,22 @@ webhooks, completion creating exactly one booking). They also check ownership (4
 | `apps.core.tasks.refresh_fx_rates` | daily 06:00 (open.er-api.com by default; override with `FX_PROVIDER_URL`) |
 | `apps.payments.tasks.process_refunds` | every 10 min |
 
+## Monitoring (Grafana)
+
+Grafana (:3001; dev login `admin` / `admin`) starts with its data sources and dashboards already loaded from
+`docker/grafana/`:
+
+- **Infrastructure:** Django API, Server (Node Exporter), PostgreSQL and Celery tasks, all from Prometheus.
+- **SafariChap business:** payments, settlement, goals, refunds, notifications and broadcasts. These panels query
+  Postgres directly through a read-only user (`grafana_ro`). The user can only read the columns listed in
+  `apps/core/management/commands/setup_grafana_db_user.py`, so no phone numbers, emails, webhook payloads or KYC
+  data. Both entrypoints create or update it on start. In production, set `GRAFANA_DB_PASSWORD` in `.env`. In dev it
+  defaults to `grafana-dev`.
+
+To change a dashboard, edit it in Grafana, then use **Export → Export as JSON → Download file** and save it over the
+file in `docker/grafana/dashboards/<folder>/`. New JSON files there appear within 30 s. A business panel that needs a
+new column must first have it added to `GRANTS` in that command.
+
 ## Deviations from salonchap_api (on purpose, per guide §12)
 
 - No secrets in the repo. The Firebase service account comes from `FIREBASE_CREDENTIALS_PATH` or

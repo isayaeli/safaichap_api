@@ -268,6 +268,11 @@ CORS_ALLOWED_ORIGIN_REGEXES = [r'^http://(localhost|127\.0\.0\.1):\d+$'] if DEBU
 FIELD_ENCRYPTION_KEY = config('FIELD_ENCRYPTION_KEY', default='')
 
 
+# Read-only Postgres role for Grafana's business dashboard (`manage.py setup_grafana_db_user`).
+GRAFANA_DB_USER = config('GRAFANA_DB_USER', default='grafana_ro')
+GRAFANA_DB_PASSWORD = config('GRAFANA_DB_PASSWORD', default='')
+
+
 # ClickPesa configuration (mobile money: USSD push + payouts)
 CLICKPESA_CLIENT_ID = config('CLICK_PESA_CLIENT_ID', default='')
 CLICKPESA_API_KEY = config('CLICK_PESA_API_KEY', default='')

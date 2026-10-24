@@ -282,6 +282,17 @@ class SystemTests(AdminBase):
                                format='json')
         self.assertEqual(bad.status_code, 400)
 
+    def test_broadcast_delivery_counts(self):
+        from apps.adminpanel.tasks import send_broadcast
+        other = make_user('cust-3')
+        broadcast = Broadcast.objects.create(title='Hi', message='News', recipients=2)
+        # One recipient has a device that takes the push, the other has none.
+        with mock.patch('apps.adminpanel.tasks.send_push_notification', side_effect=[True, False]):
+            result = send_broadcast(broadcast.pk, [self.customer.pk, other.pk])
+        self.assertEqual(result, {'sent': 2, 'pushed': 1, 'failed': 0})
+        broadcast.refresh_from_db()
+        self.assertEqual((broadcast.sent, broadcast.pushed, broadcast.failed), (2, 1, 0))
+
     def test_upload(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
         with self.settings(MEDIA_ROOT=self._tmp()):

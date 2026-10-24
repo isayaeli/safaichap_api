@@ -163,9 +163,13 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL}
+      - DB_NAME=${DB_NAME}
+      - GRAFANA_DB_USER=${GRAFANA_DB_USER:-grafana_ro}
+      - GRAFANA_DB_PASSWORD=${GRAFANA_DB_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
     restart: always

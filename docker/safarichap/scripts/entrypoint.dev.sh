@@ -31,6 +31,9 @@ if [ "$RUN_MIGRATIONS" != "false" ]; then
 
     echo "🔐 Syncing dashboard roles..."
     python manage.py seed_rbac
+
+    echo "📊 Syncing Grafana's read-only database user..."
+    python manage.py setup_grafana_db_user
 fi
 
 echo "🚀 Starting: $*"

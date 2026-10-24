@@ -1,0 +1,12 @@
+# Loads every dashboard JSON under /var/lib/grafana/dashboards; each subfolder becomes a Grafana folder.
+# To change one: edit it in Grafana, then Share → Export → Save to file, and commit it over the old JSON.
+apiVersion: 1
+
+providers:
+  - name: safarichap
+    type: file
+    allowUiUpdates: true
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true

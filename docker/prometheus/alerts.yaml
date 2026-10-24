@@ -13,7 +13,7 @@ groups:
 
       # High response time
       - alert: SlowResponseTime
-        expr: histogram_quantile(0.95, rate(django_http_requests_latency_seconds_bucket[5m])) > 2
+        expr: histogram_quantile(0.95, sum by (le) (rate(django_http_requests_latency_seconds_by_view_method_bucket[5m]))) > 2
         for: 5m
         labels:
           severity: warning
@@ -41,7 +41,7 @@ groups:
 
       # Celery task failures (payments reconciliation, refunds, daily goal processing)
       - alert: CeleryTaskFailures
-        expr: rate(celery_tasks_total{state="FAILURE"}[5m]) > 0
+        expr: sum(rate(celery_task_failed_total[5m])) > 0
         for: 1m
         labels:
           severity: critical

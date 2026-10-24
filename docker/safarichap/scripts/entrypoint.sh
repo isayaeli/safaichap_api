@@ -26,6 +26,7 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "🔄 Running migrations..."
     python manage.py migrate --noinput
     python manage.py seed_rbac
+    python manage.py setup_grafana_db_user
 
     echo "📦 Collecting static files..."
     python manage.py collectstatic --noinput

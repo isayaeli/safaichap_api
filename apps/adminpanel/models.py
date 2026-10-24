@@ -72,7 +72,11 @@ class Broadcast(TimeStampedModel):
     title = models.CharField(max_length=255)
     message = models.TextField()
     audience = models.JSONField(default=dict, help_text='e.g. {"kind": "residency", "value": "resident"}')
-    recipients = models.PositiveIntegerField(default=0)
+    recipients = models.PositiveIntegerField(default=0, help_text="Customers targeted when it was sent.")
+    # Filled in by the send_broadcast task once it finishes.
+    sent = models.PositiveIntegerField(default=0, help_text="In-app notifications created.")
+    pushed = models.PositiveIntegerField(default=0, help_text="Recipients whose phone got the push.")
+    failed = models.PositiveIntegerField(default=0, help_text="Recipients we couldn't notify at all.")
     sent_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='+')
 
     class Meta:
