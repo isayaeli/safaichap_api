@@ -38,4 +38,4 @@ class AuditLogAdmin(admin.ModelAdmin):
 
 @admin.register(Broadcast)
 class BroadcastAdmin(admin.ModelAdmin):
-    list_display = ('title', 'recipients', 'sent_by', 'created_at')
+    list_display = ('title', 'recipients', 'sent', 'pushed', 'failed', 'sent_by', 'created_at')

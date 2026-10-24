@@ -1,0 +1,29 @@
+# Loaded by Grafana at startup. Values like $GRAFANA_DB_PASSWORD come from the grafana container's environment.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s          # matches the scrape interval
+
+  # Business dashboard. Read-only role with column-level grants (manage.py setup_grafana_db_user).
+  - name: SafariChap DB
+    uid: safarichap-db
+    type: grafana-postgresql-datasource
+    url: db:5432
+    user: $GRAFANA_DB_USER
+    editable: false
+    jsonData:
+      database: $DB_NAME
+      sslmode: disable
+      postgresVersion: 1600
+      maxOpenConns: 5
+      maxIdleConns: 2
+    secureJsonData:
+      password: $GRAFANA_DB_PASSWORD
